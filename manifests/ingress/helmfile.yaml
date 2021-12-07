@@ -1,0 +1,12 @@
+repositories:
+  - name: ingress-nginx
+    url: https://kubernetes.github.io/ingress-nginx
+
+releases:
+  - name: ingress-release
+    chart: ingress-nginx/ingress-nginx
+    namespace: ingress
+    createNamespace: true
+    values:
+      - controller.publishService.enabled: true
+

@@ -1,0 +1,11 @@
+repositories:
+  - name: jetstack
+    url: https://charts.jetstack.io
+
+releases:
+  - name: certmanager-release
+    chart: jetstack/cert-manager
+    namespace: certmanager
+    createNamespace: true
+    values:
+      - installCRDs: true

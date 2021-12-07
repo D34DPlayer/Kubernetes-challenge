@@ -1,0 +1,185 @@
+repositories:
+  - name: harbor
+    url: https://helm.goharbor.io
+
+releases:
+  - name: harbor-release
+    chart: harbor/harbor
+    namespace: harbor
+    createNamespace: true
+    values:
+      - expose:
+          type: ingress
+          tls:
+            enabled: true
+            certSource: secret
+            secret:
+              secretName: "harbor-core-tls"
+              notarySecretName: "harbor-notary-tls"
+          ingress:
+            hosts:
+              core: <YOUR_CORE_DOMAIN>
+              notary: <YOUR_NOTARY_DOMAIN>
+            controller: default
+            annotations:
+              kubernetes.io/ingress.class: nginx
+              cert-manager.io/cluster-issuer: letsencrypt-prod
+              ingress.kubernetes.io/ssl-redirect: "true"
+              ingress.kubernetes.io/proxy-body-size: "0"
+              nginx.ingress.kubernetes.io/ssl-redirect: "true"
+              nginx.ingress.kubernetes.io/proxy-body-size: "0"
+            notary:
+              annotations: {}
+            harbor:
+              annotations: {}
+      - externalURL: https://<YOUR_CORE_DOMAIN>
+      - internalTLS:
+          enabled: true
+      - ipFamily:
+          ipv6:
+            enabled: false
+          ipv4:
+            enabled: true
+      - persistence:
+          enabled: true
+          resourcePolicy: "keep"
+          persistentVolumeClaim:
+            registry:
+              storageClass: do-block-storage
+              accessMode: ReadWriteOnce
+              size: 1Gi
+            chartmuseum:
+              storageClass: do-block-storage
+              accessMode: ReadWriteOnce
+              size: 1Gi
+            jobservice:
+              storageClass: do-block-storage
+              accessMode: ReadWriteOnce
+              size: 1Gi
+            trivy:
+              storageClass: do-block-storage
+              accessMode: ReadWriteOnce
+              size: 1Gi
+
+          imageChartStorage:
+            disableredirect: false
+            type: s3
+            s3:
+              region: <YOUR_SPACE_REGION>
+              bucket: <YOUR_SPACE_BUCKET>
+              accesskey: <YOUR_SPACE_PUBLIC_KEY>
+              secretkey: <YOUR_SPACE_SECRET_KEY>
+              regionendpoint: https://<YOUR_SPACE_REGION>.digitaloceanspaces.com
+      - imagePullPolicy: IfNotPresent
+      - updateStrategy:
+          type: Recreate
+      - logLevel: warning
+      - harborAdminPassword: "admin"
+      - secretKey: <SECRET_KEY>
+      - proxy:
+          httpProxy:
+          httpsProxy:
+          noProxy: 127.0.0.1,localhost,.local,.internal
+          components:
+            - core
+            - jobservice
+            - trivy
+      - portal:
+          image:
+            repository: goharbor/harbor-portal
+            tag: v2.4.0
+          replicas: 1
+      - core:
+          image:
+            repository: goharbor/harbor-core
+            tag: v2.4.0
+          replicas: 1
+          startupProbe:
+            enabled: true
+            initialDelaySeconds: 10
+      - jobservice:
+          image:
+            repository: goharbor/harbor-jobservice
+            tag: v2.4.0
+          replicas: 1
+          maxJobWorkers: 10
+          jobLoggers:
+            - file
+      - registry:
+          registry:
+            image:
+              repository: goharbor/registry-photon
+              tag: v2.4.0
+          controller:
+            image:
+              repository: goharbor/harbor-registryctl
+              tag: v2.4.0
+          replicas: 1
+          relativeurls: false
+          credentials:
+            username: "harbor_registry_user"
+            password: "harbor_registry_password"
+          middleware:
+            enabled: false
+      - chartmuseum:
+          enabled: true
+          absoluteUrl: false
+          image:
+            repository: goharbor/chartmuseum-photon
+            tag: v2.4.0
+          replicas: 1
+          indexLimit: 0
+      - trivy:
+          enabled: true
+          image:
+            repository: goharbor/trivy-adapter-photon
+            tag: v2.4.0
+          replicas: 1
+          resources:
+            requests:
+              cpu: 200m
+              memory: 512Mi
+            limits:
+              cpu: 1
+              memory: 1Gi
+      - notary:
+          enabled: true
+          server:
+            image:
+              repository: goharbor/notary-server-photon
+              tag: v2.4.0
+            replicas: 1
+          signer:
+            image:
+              repository: goharbor/notary-signer-photon
+              tag: v2.4.0
+            replicas: 1
+      - database:
+          type: external
+          external:
+            host: "database.postgres"
+            port: "5432"
+            username: "postgres"
+            password: <YOUR_POSTGRES_PASSWORD>
+            coreDatabase: "registry"
+            notaryServerDatabase: "notary_server"
+            notarySignerDatabase: "notary_signer"
+            sslmode: "disable"
+      - redis:
+          type: external
+          external:
+            addr: "redis-release-master.redis:6379"
+            password: <YOUR_REDIS_PASSWORD>
+      - exporter:
+          replicas: 1
+          image:
+            repository: goharbor/harbor-exporter
+            tag: v2.4.0
+          cacheDuration: 23
+          cacheCleanInterval: 14400
+      - metrics:
+          enabled: false
+          serviceMonitor:
+            enabled: false
+      - trace:
+          enabled: false

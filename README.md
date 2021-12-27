@@ -189,7 +189,7 @@ There are different ways those certificates can be obtained, so instead of setti
 Helm's values, it creates a new definition of ressource that represents an actual certificate
 issuer, so we just have to create a [definition for that ressource](manifests/cert-manager/production-issuer.yaml).
 
-## Step 7: DNS
+### Step 7: DNS
 
 Let's Encrypt (what we use to get certificates) requires a domain name to be linked to the ingress
 service address, to verify that you actually own that domain name. (There are other ways to do it,
@@ -198,7 +198,7 @@ but it always requires the DNS at some level).
 To do that you can use your registrar's own service, your own DNS server or DO's DNS service. I chose
 DO's so that I could keep everything under the same hood.
 
-## Final step: Creating the Harbor service
+### Final step: Creating the Harbor service
 
 As said before, Harbor has a Helm chart, so the installation only requires to get the values and change
 them to our fit,  [Harbor's helmfile](manifests/harbor/helmfile.yaml) is way bigger that the other

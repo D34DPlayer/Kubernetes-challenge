@@ -41,6 +41,14 @@ Well that's basically what orchestration is, you can learn more about it on
 Since I'm new to kubernetes, I decided to go with one of the "easier" ones and so I'm going to explain
 how the "Deploy an internal container registry" challenge went.
 
+### Requirements
+
+For this challenge we will need what's called a Kubernetes cluster, you can host it yourself but the easiest
+way is to get it from a cloud provider, since Digital Ocean made this challenge I used theirs to work
+this out and test everything out.
+
+You'll optionally need an S3 bucket, Digital Ocean Spaces are exactly that so I'll be using it as well.
+
 ### Step 0: Choosing the right challenge
 
 This may seem common sense, but before choosing any of this challenges, you need to know
